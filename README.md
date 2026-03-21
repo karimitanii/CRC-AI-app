@@ -1,0 +1,1 @@
+minimal ai app on crc 
