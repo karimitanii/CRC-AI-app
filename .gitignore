@@ -2,3 +2,17 @@
 
 AGENTS.md
 
+output.txt
+dist
+.mastra
+.env.development
+.env
+*.db
+*.db-*
+.netlify
+.vercel
+node_modules
+
+Plan.md
+
+Plan-implement.md
