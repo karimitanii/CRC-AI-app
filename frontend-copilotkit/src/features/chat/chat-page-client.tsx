@@ -3,8 +3,9 @@
 import {
   CopilotChat,
 } from '@copilotkit/react-core/v2';
-import { LogOut, MessageSquarePlus } from 'lucide-react';
+import { LogOut, MessageSquarePlus, Trash2 } from 'lucide-react';
 import { type ReactNode, useCallback, useEffect, useMemo, useState } from 'react';
+import { CopilotProvider } from '@/components/copilot-provider';
 import { CHAT_AGENT_ID } from '@/lib/config';
 import { ThreadSummary, ThreadsResponse } from '@/lib/types';
 import { cn } from '@/lib/utils';
@@ -58,6 +59,24 @@ export function ChatPageClient() {
     setActiveThreadId(created.id);
   }
 
+  async function deleteThread(threadId: string) {
+    const response = await fetch(`/api/mastra/threads/${threadId}`, {
+      method: 'DELETE',
+    });
+
+    if (!response.ok) {
+      throw new Error(await response.text());
+    }
+
+    setThreads(prev => {
+      const next = prev.filter(thread => thread.id !== threadId);
+      if (activeThreadId === threadId) {
+        setActiveThreadId(next[0]?.id ?? null);
+      }
+      return next;
+    });
+  }
+
   async function handleLogout() {
     await fetch('/api/auth/logout', { method: 'POST' });
     window.location.href = '/login';
@@ -91,22 +110,36 @@ export function ChatPageClient() {
             <p className="text-sm text-[var(--color-muted)]">Loading chats...</p>
           ) : null}
           {threads.map(thread => (
-            <button
+            <div
               key={thread.id}
-              type="button"
-              onClick={() => setActiveThreadId(thread.id)}
               className={cn(
-                'w-full rounded-md border px-3 py-2 text-left text-sm transition',
+                'group w-full rounded-md border px-3 py-2 text-sm transition',
                 activeThreadId === thread.id
                   ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/20'
                   : 'border-[var(--color-border)] bg-[var(--color-surface)] hover:border-[var(--color-accent)]/60',
               )}
             >
-              <p className="truncate font-medium">{thread.title || 'Untitled chat'}</p>
-              <p className="mt-1 truncate text-xs text-[var(--color-muted)]">
-                {new Date(thread.updatedAt).toLocaleString()}
-              </p>
-            </button>
+              <div className="flex items-start justify-between gap-2">
+                <button
+                  type="button"
+                  onClick={() => setActiveThreadId(thread.id)}
+                  className="min-w-0 flex-1 text-left"
+                >
+                  <p className="truncate font-medium">{thread.title || 'Untitled chat'}</p>
+                  <p className="mt-1 truncate text-xs text-[var(--color-muted)]">
+                    {new Date(thread.updatedAt).toLocaleString()}
+                  </p>
+                </button>
+                <button
+                  type="button"
+                  aria-label="Delete chat"
+                  onClick={() => void deleteThread(thread.id)}
+                  className="rounded-md p-1 text-[var(--color-muted)] opacity-0 transition hover:bg-red-950/40 hover:text-red-300 group-hover:opacity-100"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
           ))}
           {!loadingThreads && threads.length === 0 ? (
             <p className="text-sm text-[var(--color-muted)]">No chats yet.</p>
@@ -144,73 +177,77 @@ export function ChatPageClient() {
             </header>
 
             <section className="copilot-chat-shell flex min-h-0 flex-1 p-4">
-              <CopilotChat
-                key={activeThread.id}
-                className="h-full w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-chat)] shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
-                agentId={CHAT_AGENT_ID}
-                threadId={activeThread.id}
-                messageView={{
-                  className: 'px-5 py-5',
-                  assistantMessage: {
-                    className:
-                      'mb-4 mr-auto max-w-[min(100%,980px)] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3',
-                    children: ({
-                      toolCallsView,
-                      markdownRenderer,
-                      toolbarVisible,
-                      toolbar,
-                    }: {
-                      toolCallsView: ReactNode;
-                      markdownRenderer: ReactNode;
-                      toolbarVisible?: boolean;
-                      toolbar: ReactNode;
-                    }) => (
-                      <>
-                        {toolCallsView}
-                        <div className="mt-2">{markdownRenderer}</div>
-                        {toolbarVisible ? <div className="mt-2">{toolbar}</div> : null}
-                      </>
-                    ),
-                  },
-                  userMessage: {
-                    className:
-                      'mb-4 ml-auto max-w-[min(100%,760px)]',
-                    children: ({
-                      messageRenderer,
-                      toolbar,
-                    }: {
-                      messageRenderer: ReactNode;
-                      toolbar: ReactNode;
-                    }) => (
-                      <>
-                        <div className="ml-auto">{messageRenderer}</div>
-                        <div>{toolbar}</div>
-                      </>
-                    ),
-                  },
-                  reasoningMessage: {
-                    className:
-                      'mb-3 mr-auto max-w-[min(100%,980px)] rounded-lg border border-dashed border-[var(--color-border)] bg-[#111827] px-3 py-2 text-[var(--color-muted)]',
-                  },
-                }}
-                input={{
-                  className: 'border-t border-[var(--color-border)] bg-[var(--color-panel)] px-4 py-3',
-                  textArea: {
-                    className:
-                      'min-h-[52px] rounded-xl border border-[var(--color-border)] bg-[#0d1420] px-4 py-3 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)]',
-                    placeholder: 'Ask about pods, deployments, events, or diagnostics...',
-                  },
-                  sendButton: {
-                    className:
-                      'h-11 rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-white hover:brightness-110',
-                  },
-                  addMenuButton: HiddenElement,
-                  startTranscribeButton: HiddenElement,
-                  cancelTranscribeButton: HiddenElement,
-                  finishTranscribeButton: HiddenElement,
-                  disclaimer: HiddenElement,
-                }}
-              />
+              <CopilotProvider key={activeThread.id}>
+                <CopilotChat
+                  key={activeThread.id}
+                  className="h-full w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-chat)] shadow-[0_20px_45px_rgba(0,0,0,0.35)]"
+                  agentId={CHAT_AGENT_ID}
+                  threadId={activeThread.id}
+                  messageView={{
+                    className: 'px-5 py-5',
+                    assistantMessage: {
+                      className:
+                        'mb-4 mr-auto max-w-[min(100%,980px)] rounded-xl border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-3',
+                      children: ({
+                        toolCallsView,
+                        markdownRenderer,
+                        toolbarVisible,
+                        toolbar,
+                      }: {
+                        toolCallsView: ReactNode;
+                        markdownRenderer: ReactNode;
+                        toolbarVisible?: boolean;
+                        toolbar: ReactNode;
+                      }) => (
+                        <>
+                          {toolCallsView}
+                          <div className="mt-2">{markdownRenderer}</div>
+                          {toolbarVisible ? <div className="mt-2">{toolbar}</div> : null}
+                        </>
+                      ),
+                    },
+                    userMessage: {
+                      className:
+                        'mb-4 ml-auto max-w-[min(100%,760px)]',
+                      children: ({
+                        message,
+                        toolbar,
+                      }: {
+                        message: { content?: unknown };
+                        toolbar: ReactNode;
+                      }) => (
+                        <>
+                          <div className="ml-auto inline-block max-w-[min(100%,760px)] whitespace-pre-wrap break-words rounded-2xl border border-red-500/50 bg-[linear-gradient(135deg,#8f1424_0%,#6f0f1d_100%)] px-4 py-2 text-[15px] leading-relaxed text-white shadow-[0_8px_24px_rgba(0,0,0,0.28)]">
+                            {renderUserMessageContent(message.content)}
+                          </div>
+                          <div>{toolbar}</div>
+                        </>
+                      ),
+                    },
+                    reasoningMessage: {
+                      className:
+                        'mb-3 mr-auto max-w-[min(100%,980px)] rounded-lg border border-dashed border-[var(--color-border)] bg-[#111827] px-3 py-2 text-[var(--color-muted)]',
+                    },
+                  }}
+                  input={{
+                    className: 'bg-[var(--color-panel)]/85 px-4 py-3',
+                    textArea: {
+                      className:
+                        'min-h-[52px] rounded-xl border border-[var(--color-border)] bg-[#0d1420] px-4 py-3 text-[14px] text-[var(--color-text)] placeholder:text-[var(--color-muted)] focus:border-[var(--color-accent)]',
+                      placeholder: 'Ask about pods, deployments, events, or diagnostics...',
+                    },
+                    sendButton: {
+                      className:
+                        'h-11 rounded-lg border border-[var(--color-accent)] bg-[var(--color-accent)] px-4 text-sm font-semibold text-white hover:brightness-110',
+                    },
+                    addMenuButton: HiddenElement,
+                    startTranscribeButton: HiddenElement,
+                    cancelTranscribeButton: HiddenElement,
+                    finishTranscribeButton: HiddenElement,
+                    disclaimer: HiddenElement,
+                  }}
+                />
+              </CopilotProvider>
             </section>
           </>
         )}
@@ -221,4 +258,28 @@ export function ChatPageClient() {
 
 function HiddenElement() {
   return null;
+}
+
+function renderUserMessageContent(content: unknown): string {
+  if (typeof content === 'string') {
+    return content;
+  }
+
+  if (Array.isArray(content)) {
+    const textParts = content
+      .map(item => {
+        if (item && typeof item === 'object' && 'type' in item && 'text' in item) {
+          const candidate = item as { type?: unknown; text?: unknown };
+          if (candidate.type === 'text' && typeof candidate.text === 'string') {
+            return candidate.text;
+          }
+        }
+        return '';
+      })
+      .filter(Boolean);
+
+    return textParts.join('\n');
+  }
+
+  return '';
 }

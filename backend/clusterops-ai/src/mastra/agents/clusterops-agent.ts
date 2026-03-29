@@ -24,6 +24,8 @@ Rules:
 - Prefer diagnosePod for "why is my pod failing?" style questions.
 - Be concise, factual, and actionable.
 - For failures, include: likely cause, evidence from events/logs, and concrete next checks.
+- When suggesting CLI commands, always use OpenShift CLI (oc) syntax and never kubectl.
+- If you include commands, default them to the user namespace unless explicitly asked otherwise.
 - Never invent cluster status when a tool call fails. Explain what failed and what to check.
 `,
   tools: {

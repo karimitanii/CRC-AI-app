@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { CopilotProvider } from '@/components/copilot-provider';
 import { ChatPageClient } from '@/features/chat/chat-page-client';
 import { getSessionUser } from '@/lib/auth';
 
@@ -9,9 +8,5 @@ export default async function ChatPage() {
     redirect('/login');
   }
 
-  return (
-    <CopilotProvider>
-      <ChatPageClient />
-    </CopilotProvider>
-  );
+  return <ChatPageClient />;
 }
