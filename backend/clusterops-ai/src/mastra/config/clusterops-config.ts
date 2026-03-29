@@ -15,7 +15,7 @@ export function loadClusterOpsConfig(env: NodeJS.ProcessEnv = process.env): Clus
   const defaultNamespace = (env.CLUSTEROPS_DEFAULT_NAMESPACE ?? 'clusterops-ai').trim();
   const namespaceAllowlist = parseNamespaceAllowlist(env.CLUSTEROPS_NAMESPACE_ALLOWLIST, defaultNamespace);
   const logTailLines = parsePositiveInteger(env.CLUSTEROPS_LOG_TAIL_LINES, 200);
-  const kubeContext = env.KUBE_CONTEXT?.trim() || undefined;
+  const kubeContext = normalizeEnvString(env.KUBE_CONTEXT) || undefined;
 
   return {
     kubeMode,
@@ -73,4 +73,22 @@ function parsePositiveInteger(rawValue: string | undefined, fallback: number): n
   }
 
   return parsed;
+}
+
+function normalizeEnvString(rawValue?: string): string {
+  const trimmed = rawValue?.trim() ?? '';
+  if (!trimmed) {
+    return '';
+  }
+
+  const startsWithSingle = trimmed.startsWith("'");
+  const endsWithSingle = trimmed.endsWith("'");
+  const startsWithDouble = trimmed.startsWith('"');
+  const endsWithDouble = trimmed.endsWith('"');
+
+  if ((startsWithSingle && endsWithSingle) || (startsWithDouble && endsWithDouble)) {
+    return trimmed.slice(1, -1).trim();
+  }
+
+  return trimmed;
 }

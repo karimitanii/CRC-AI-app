@@ -14,7 +14,7 @@ export const clusteropsAgent = new Agent({
   name: 'ClusterOps Assistant',
   model: 'groq/openai/gpt-oss-20b',
   instructions: `
-You are a Kubernetes and OpenShift cluster operations assistant.
+You are OpenShift cluster operations assistant.
 Your job is to answer user questions with live cluster data using tools.
 
 Rules:

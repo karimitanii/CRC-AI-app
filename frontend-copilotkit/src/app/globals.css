@@ -1,0 +1,137 @@
+@import "tailwindcss";
+
+:root {
+  --color-bg: #0b0e14;
+  --color-panel: #131a26;
+  --color-chat: #0f1724;
+  --color-surface: #1b2738;
+  --color-border: #314056;
+  --color-text: #f4f7fb;
+  --color-muted: #b4bfd2;
+  --color-accent: #ee0000;
+  --color-tool-bg: #121c2c;
+}
+
+@theme inline {
+  --font-sans: "IBM Plex Sans", "Segoe UI", "Arial", sans-serif;
+  --font-mono: "IBM Plex Mono", "JetBrains Mono", "SFMono-Regular", monospace;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at 85% -5%, rgba(238, 0, 0, 0.2) 0%, transparent 35%),
+    radial-gradient(circle at -5% 110%, rgba(238, 0, 0, 0.12) 0%, transparent 45%),
+    linear-gradient(180deg, #0a0e14 0%, #0d121b 100%);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #404a5f #111824;
+}
+
+.copilot-chat-shell [data-copilotkit] {
+  font-family: var(--font-sans);
+  --background: #0f1724;
+  --foreground: #f4f7fb;
+  --card: #172335;
+  --card-foreground: #f4f7fb;
+  --popover: #172335;
+  --popover-foreground: #f4f7fb;
+  --primary: #ee0000;
+  --primary-foreground: #ffffff;
+  --secondary: #24324a;
+  --secondary-foreground: #f4f7fb;
+  --muted: #22324a;
+  --muted-foreground: #b4bfd2;
+  --accent: #2b1115;
+  --accent-foreground: #ffd4d4;
+  --border: #314056;
+  --input: #314056;
+  --ring: #ee0000;
+  --sidebar: #131a26;
+  --sidebar-foreground: #f4f7fb;
+  --sidebar-border: #314056;
+}
+
+.copilot-chat-shell [data-testid='copilot-chat'] {
+  height: 100%;
+}
+
+.copilot-chat-shell [class*='cpk:max-w-3xl'] {
+  max-width: min(100%, 1120px) !important;
+  width: 100%;
+}
+
+.copilot-chat-shell [data-testid='copilot-assistant-message'] {
+  color: var(--color-text);
+}
+
+.copilot-chat-shell [data-testid='copilot-user-message'] {
+  padding-top: 0 !important;
+}
+
+.copilot-chat-shell [data-testid='copilot-user-message'] .cpk\:bg-muted {
+  background: linear-gradient(135deg, #7e1020 0%, #5f0c18 100%) !important;
+  color: #fff !important;
+  border: 1px solid rgba(238, 0, 0, 0.45);
+  box-shadow: 0 0 0 1px rgba(238, 0, 0, 0.08) inset;
+}
+
+.copilot-chat-shell [data-copilotkit] textarea {
+  color: var(--color-text);
+  background: #0a1322;
+  border: 1px solid var(--color-border);
+}
+
+.copilot-chat-shell [data-copilotkit] textarea::placeholder {
+  color: var(--color-muted);
+}
+
+.copilot-chat-shell [data-copilotkit] button {
+  transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;
+}
+
+.copilot-chat-shell [data-copilotkit] [data-testid='copilot-chat-input'],
+.copilot-chat-shell [data-copilotkit] form {
+  background: #131a26 !important;
+  border-color: var(--color-border) !important;
+}
+
+.copilot-chat-shell [data-copilotkit] textarea,
+.copilot-chat-shell [data-copilotkit] textarea:focus {
+  background: #0a1322 !important;
+  color: var(--color-text) !important;
+  border-color: var(--color-border) !important;
+  box-shadow: none !important;
+}
+
+.copilot-chat-shell [data-copilotkit] [data-testid='copilot-send-button'] {
+  background: var(--color-accent) !important;
+  border-color: var(--color-accent) !important;
+  color: #ffffff !important;
+}
+
+.copilot-chat-shell pre,
+.copilot-chat-shell code {
+  font-family: var(--font-mono);
+}
+
+.copilot-chat-shell table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 12px 0;
+}
+
+.copilot-chat-shell th,
+.copilot-chat-shell td {
+  border: 1px solid var(--color-border);
+  padding: 8px;
+  text-align: left;
+}
+
+.copilot-chat-shell th {
+  background: rgba(255, 255, 255, 0.04);
+}

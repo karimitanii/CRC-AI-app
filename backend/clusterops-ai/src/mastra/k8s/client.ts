@@ -23,7 +23,16 @@ export function getKubernetesClients(config: ClusterOpsConfig): KubernetesClient
   } else {
     kubeConfig.loadFromDefault();
     if (config.kubeContext) {
-      kubeConfig.setCurrentContext(config.kubeContext);
+      const availableContexts = kubeConfig.getContexts().map(context => context.name);
+      const requestedContext = config.kubeContext;
+
+      if (!availableContexts.includes(requestedContext)) {
+        throw new Error(
+          `Configured KUBE_CONTEXT '${requestedContext}' was not found. Available contexts: ${availableContexts.join(', ')}`,
+        );
+      }
+
+      kubeConfig.setCurrentContext(requestedContext);
     }
   }
 
