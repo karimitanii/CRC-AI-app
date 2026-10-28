@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "clusterops-ai.frontendName" . }}-config
+  labels:
+    {{- include "clusterops-ai.labels" . | nindent 4 }}
+data:
+  NEXT_PUBLIC_APP_NAME: {{ .Values.frontend.env.NEXT_PUBLIC_APP_NAME | quote }}
+  NEXT_PUBLIC_COPILOTKIT_RUNTIME_URL: {{ .Values.frontend.env.NEXT_PUBLIC_COPILOTKIT_RUNTIME_URL | quote }}
+  NEXT_PUBLIC_COPILOTKIT_AGENT: {{ .Values.frontend.env.NEXT_PUBLIC_COPILOTKIT_AGENT | quote }}
+  AUTH_COOKIE_NAME: {{ .Values.frontend.env.AUTH_COOKIE_NAME | quote }}
+  MASTRA_BASE_URL: {{ default (printf "http://%s:%v" (include "clusterops-ai.backendName" .) .Values.backend.service.port) .Values.frontend.env.MASTRA_BASE_URL | quote }}

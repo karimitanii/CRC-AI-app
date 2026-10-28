@@ -52,6 +52,8 @@ export const mastra = new Mastra({
     'clusterops-agent': clusteropsAgent,
   },
   server: {
+    host: process.env.HOST || '0.0.0.0',
+    port: Number(process.env.PORT || 4111),
     apiRoutes: [copilotKitBaseRoute, copilotKitWildcardRoute],
   },
   storage: new LibSQLStore({

@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "clusterops-ai.backendName" . }}-config
+  labels:
+    {{- include "clusterops-ai.labels" . | nindent 4 }}
+data:
+  HOST: {{ .Values.backend.env.HOST | quote }}
+  HOME: {{ .Values.backend.env.HOME | quote }}
+  XDG_CONFIG_HOME: {{ .Values.backend.env.XDG_CONFIG_HOME | quote }}
+  CLUSTEROPS_KUBE_MODE: {{ .Values.backend.env.CLUSTEROPS_KUBE_MODE | quote }}
+  CLUSTEROPS_DEFAULT_NAMESPACE: {{ .Values.backend.env.CLUSTEROPS_DEFAULT_NAMESPACE | quote }}
+  CLUSTEROPS_NAMESPACE_ALLOWLIST: {{ .Values.backend.env.CLUSTEROPS_NAMESPACE_ALLOWLIST | quote }}
+  CLUSTEROPS_LOG_TAIL_LINES: {{ .Values.backend.env.CLUSTEROPS_LOG_TAIL_LINES | quote }}
+  COPILOTKIT_CHAT_PATH: {{ .Values.backend.env.COPILOTKIT_CHAT_PATH | quote }}
+  COPILOTKIT_ALLOWED_ORIGINS: {{ .Values.backend.env.COPILOTKIT_ALLOWED_ORIGINS | quote }}

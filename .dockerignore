@@ -1,0 +1,17 @@
+.git
+.github
+.codex
+node_modules
+**/node_modules
+.next
+**/.next
+.mastra
+**/.mastra
+*.db
+*.db-*
+.env
+**/.env
+dist
+output.txt
+deploy/helm
+frontend

@@ -1,0 +1,87 @@
+name: Build And Deploy To CRC
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  REGISTRY: quay.io
+  BACKEND_IMAGE_NAME: clusterops-backend
+  FRONTEND_IMAGE_NAME: clusterops-frontend
+  RELEASE_NAME: clusterops-ai
+  NAMESPACE: clusterops-ai
+
+jobs:
+  build-and-push:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to Quay
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+
+      - name: Set image tags
+        id: vars
+        run: |
+          echo "TAG_SHA=${GITHUB_SHA}" >> "$GITHUB_OUTPUT"
+          echo "BACKEND_IMAGE=${REGISTRY}/${{ secrets.QUAY_ORG }}/${BACKEND_IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "FRONTEND_IMAGE=${REGISTRY}/${{ secrets.QUAY_ORG }}/${FRONTEND_IMAGE_NAME}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push backend image
+        run: |
+          docker build \
+            -f deploy/docker/backend.Dockerfile \
+            -t "${{ steps.vars.outputs.BACKEND_IMAGE }}:${{ steps.vars.outputs.TAG_SHA }}" \
+            .
+          docker push "${{ steps.vars.outputs.BACKEND_IMAGE }}:${{ steps.vars.outputs.TAG_SHA }}"
+
+      - name: Build and push frontend image
+        run: |
+          docker build \
+            -f deploy/docker/frontend-copilotkit.Dockerfile \
+            -t "${{ steps.vars.outputs.FRONTEND_IMAGE }}:${{ steps.vars.outputs.TAG_SHA }}" \
+            .
+          docker push "${{ steps.vars.outputs.FRONTEND_IMAGE }}:${{ steps.vars.outputs.TAG_SHA }}"
+
+  deploy:
+    runs-on: self-hosted
+    needs: build-and-push
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Ensure oc and helm are installed
+        run: |
+          command -v oc >/dev/null 2>&1 || (echo "oc is not installed on runner" && exit 1)
+          command -v helm >/dev/null 2>&1 || (echo "helm is not installed on runner" && exit 1)
+
+      - name: Login to CRC
+        run: |
+          oc login "${{ secrets.CRC_API_URL }}" --token="${{ secrets.CRC_TOKEN }}"
+          oc project "${{ env.NAMESPACE }}"
+
+      - name: Deploy chart
+        run: |
+          helm upgrade --install "${{ env.RELEASE_NAME }}" deploy/helm/clusterops-ai \
+            -n "${{ env.NAMESPACE }}" \
+            -f deploy/helm/clusterops-ai/values-crc.yaml \
+            --set "backend.image.repository=${{ env.REGISTRY }}/${{ secrets.QUAY_ORG }}/${{ env.BACKEND_IMAGE_NAME }}" \
+            --set "backend.image.tag=${{ github.sha }}" \
+            --set "frontend.image.repository=${{ env.REGISTRY }}/${{ secrets.QUAY_ORG }}/${{ env.FRONTEND_IMAGE_NAME }}" \
+            --set "frontend.image.tag=${{ github.sha }}"
+
+      - name: Verify rollout
+        run: |
+          oc rollout status deployment/"${{ env.RELEASE_NAME }}-backend" -n "${{ env.NAMESPACE }}" --timeout=180s
+          oc rollout status deployment/"${{ env.RELEASE_NAME }}-frontend" -n "${{ env.NAMESPACE }}" --timeout=180s
+
+      - name: Verify backend service account
+        run: |
+          oc get deploy "${{ env.RELEASE_NAME }}-backend" -n "${{ env.NAMESPACE }}" -o jsonpath='{.spec.template.spec.serviceAccountName}{"\n"}'

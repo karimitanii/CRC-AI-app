@@ -1,0 +1,21 @@
+{{- if .Values.backend.route.enabled }}
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: {{ include "clusterops-ai.backendName" . }}
+  labels:
+    {{- include "clusterops-ai.labels" . | nindent 4 }}
+    app.kubernetes.io/component: backend
+spec:
+  {{- if .Values.backend.route.host }}
+  host: {{ .Values.backend.route.host }}
+  {{- end }}
+  to:
+    kind: Service
+    name: {{ include "clusterops-ai.backendName" . }}
+  port:
+    targetPort: http
+  tls:
+    termination: {{ .Values.backend.route.tls.termination }}
+    insecureEdgeTerminationPolicy: {{ .Values.backend.route.tls.insecureEdgeTerminationPolicy }}
+{{- end }}

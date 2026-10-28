@@ -1,0 +1,42 @@
+imagePullSecrets:
+  - name: quay-registry
+
+serviceAccount:
+  create: false
+  name: clusterops-assistant
+
+backend:
+  image:
+    repository: quay.io/<your-org>/clusterops-backend
+    tag: "<set-by-ci>"
+    pullPolicy: IfNotPresent
+  route:
+    enabled: true
+    host: clusterops-backend.apps-crc.testing
+  env:
+    HOST: 0.0.0.0
+    HOME: /tmp
+    XDG_CONFIG_HOME: /tmp/.config
+    CLUSTEROPS_KUBE_MODE: incluster
+    CLUSTEROPS_DEFAULT_NAMESPACE: clusterops-ai
+    CLUSTEROPS_NAMESPACE_ALLOWLIST: clusterops-ai
+    CLUSTEROPS_LOG_TAIL_LINES: "200"
+    COPILOTKIT_CHAT_PATH: /chat
+    COPILOTKIT_ALLOWED_ORIGINS: https://clusterops.apps-crc.testing
+  secretRefs:
+    - clusterops-backend-secrets
+
+frontend:
+  image:
+    repository: quay.io/<your-org>/clusterops-frontend
+    tag: "<set-by-ci>"
+    pullPolicy: IfNotPresent
+  route:
+    enabled: true
+    host: clusterops.apps-crc.testing
+  env:
+    NEXT_PUBLIC_APP_NAME: ClusterOps Assistant
+    NEXT_PUBLIC_COPILOTKIT_RUNTIME_URL: /api/copilotkit
+    NEXT_PUBLIC_COPILOTKIT_AGENT: clusterops-agent
+    AUTH_COOKIE_NAME: clusterops_session
+    MASTRA_BASE_URL: ""
